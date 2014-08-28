@@ -2,13 +2,22 @@
 import sys
 
 
-def generate(posts, out):
+def generate(posts_dir, out_dir):
 	import markdown
 	from pathlib import Path
-	for post in Path(posts).iterdir():
+	posts_names = []
+	posts_links = []
+	for post in Path(posts_dir).iterdir():
 		with post.open() as fin:
-			fout = Path(out) / post.with_suffix(".html").name
+			posts_links.append(post.with_suffix(".html").name)
+			posts_names.append(post.with_suffix(".name").name)
+			fout = Path(out_dir) / post.with_suffix(".html").name
 			fout.open('w').write(markdown.markdown(fin.read()))
+	fout = Path(out_dir) / "index.html"
+	fs = fout.open('w')
+	for name, link in zip(posts_names, posts_links):
+		fs.write("<a href='%s'>%s</a>\n" % (link, name))
+
 
 
 		
