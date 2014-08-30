@@ -17,16 +17,18 @@ def read_post(inp):
 		'content' : md.convert(inp)
 	}
 
-
-def generate(args):
-	def get(map_of_lists, key, alt):
+def get(map_of_lists, key, alt, single_value = True):
 		if key in map_of_lists:
-			if len(map_of_lists[key]) > 0:
-				return map_of_lists[key][0]
+			if single_value:
+				if len(map_of_lists[key]) > 0:
+					return map_of_lists[key][0]
+			else:
+				return map_of_lists[key]
 		return alt
 
+def generate(blog, args):
 	posts = []
-	for post_file in args.posts.iterdir():
+	for post_file in blog['posts']:
 		with post_file.open() as fin:
 			row_post = read_post(fin.read())
 			post = {'meta' : row_post['meta'],
@@ -49,20 +51,34 @@ def prepare_directories(args):
 	for f in files:
 		os.remove(f)
 
+def blog_meta(blog_file):
+	import markdown
+	md = markdown.Markdown(extensions = ['meta'])
+	with blog_file.open() as fin:
+		content = md.convert(fin.read())
+		meta = md.Meta.copy()
+		return {
+			'title' : get(meta, 'title', 'Blog'),
+			'motto' : get(meta, 'motto', 'Blogging for living'),
+			'posts' : map(Path, get(meta, 'posts', [], False)),
+			'meta' : meta
+		}
+
 
 if __name__ == "__main__":
 	import argparse
 	from pathlib import Path
 
 	parser = argparse.ArgumentParser(description='Generates static blog content from markdown posts.')
+	parser.add_argument('blog', type=Path, help='File with general information about blog', default='blog')
 	parser.add_argument('-posts', type=Path, help='directory with posts', default='posts')
 	parser.add_argument('-target', type=Path, help='generated content destination', default='target')
 	parser.add_argument('-templates', type=Path, help='directory with templates', default='templates')
 
 	args = parser.parse_args()
-
+	blog = blog_meta(args.blog)
 	prepare_directories(args)
-	generate(parser.parse_args())
+	generate(blog, args)
 
 
 
