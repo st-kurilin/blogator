@@ -1,14 +1,7 @@
 
 import sys
 
-def write_templated(template_path, out_path, data):
-	import pystache
-	outs = out_path.open('w')
-	template = pystache.parse(template_path.open('r').read())
-	renderer = pystache.Renderer()
-	outs.write(renderer.render(template, data))
-
-def read_post(inp):
+def md_read(inp):
 	import markdown
 	md = markdown.Markdown(extensions = ['meta'])
 	content = md.convert(inp)
@@ -17,28 +10,49 @@ def read_post(inp):
 		'content' : md.convert(inp)
 	}
 
-def get(map_of_lists, key, alt = None, single_value = True):
-		if key in map_of_lists:
-			if single_value:
-				if len(map_of_lists[key]) > 0:
-					return map_of_lists[key][0]
-			else:
-				return map_of_lists[key]
-		return alt
+def md_meta_get(meta, key, alt = None, single_value = True):
+	if key in meta:
+		if single_value:
+			if len(meta[key]) > 0:
+				return meta[key][0]
+		else:
+			return meta[key]
+	return alt
 
-def collect_posts_data(post_paths):
-	posts = []
-	for post_file in post_paths:
-		with post_file.open() as fin:
-			row_post = read_post(fin.read())
-			post = {'meta' : row_post['meta'],
-					'content': row_post['content']}
-			post['title'] = get(row_post['meta'], 'title', post_file.with_suffix("._").name)
-			post['short_title'] = get(row_post['meta'], 'short_title', post['title'])
-			post['link_base'] = get(row_post['meta'], 'link', post_file.with_suffix(".html").name)
-			post['link'] = './' + post['link_base']
-			posts.append(post)
-	return posts
+def write_templated(template_path, out_path, data):
+	import pystache
+	outs = out_path.open('w')
+	template = pystache.parse(template_path.open('r').read())
+	renderer = pystache.Renderer()
+	outs.write(renderer.render(template, data))
+
+def read_blog_meta(blog_file_path):
+	import markdown
+	md = markdown.Markdown(extensions = ['meta'])
+	with blog_file_path.open() as fin:
+		content = md.convert(fin.read())
+		meta = md.Meta.copy()
+		favicon_file = md_meta_get(meta, 'favicon-file')
+		return {
+			'title' : md_meta_get(meta, 'title', 'Blog'),
+			'annotation' : md_meta_get(meta, 'annotation', 'Blogging for living'),
+			'favicon-file' : favicon_file ,
+			'favicon': 'favicon.ico' if favicon_file is not None else md_meta_get(meta, 'favicon-url', "http://www.favicon.cc/favicon/169/1/favicon.png"),
+			'posts' : map((lambda rel : blog_file_path.parent / rel), md_meta_get(meta, 'posts', [], False)),
+			'meta' : meta
+		}
+
+def read_post(post_file_path):
+	with post_file_path.open() as fin:
+		row_post = md_read(fin.read())
+		post = {}
+		post['meta'] = row_post['meta']
+		post['content'] = row_post['content']
+		post['title'] = md_meta_get(row_post['meta'], 'title', post_file_path.with_suffix("._").name)
+		post['short_title'] = md_meta_get(row_post['meta'], 'short_title', post['title'])
+		post['link_base'] = md_meta_get(row_post['meta'], 'link', post_file_path.with_suffix(".html").name)
+		post['link'] = './' + post['link_base']
+		return post
 
 def prepare_favicon(blog, target_dir):
 	import shutil
@@ -47,42 +61,23 @@ def prepare_favicon(blog, target_dir):
 		destination_path = target_dir / 'favicon.ico'
 		shutil.copyfile(orig_path.as_posix(), destination_path.as_posix())
 
-
-def generate(blog, args):
-	print (blog['favicon-file'])
-	print (blog['favicon'])
-	prepare_favicon(blog, args.target)
-	posts = collect_posts_data(blog['posts'])
-	for post in posts:
-		write_templated(args.templates / "post.template.html", args.target / post['link_base'], {'blog' : blog, 'posts': posts, 'post': post})			
-	write_templated(args.templates / "index.template.html", args.target / "index.html", {'blog' : blog, 
-		'posts':posts})
-		
-def prepare_directories(args):
+def clean_target(target):
 	import os
 	import glob
-	t = args.target.as_posix()
+	t = target.as_posix()
 	if not os.path.exists(t): os.makedirs(t)
 	files = glob.glob(t + '/*')
 	for f in files:
 		os.remove(f)
 
-def blog_meta(blog_file):
-	import markdown
-	md = markdown.Markdown(extensions = ['meta'])
-	with blog_file.open() as fin:
-		content = md.convert(fin.read())
-		meta = md.Meta.copy()
-		favicon_file = get(meta, 'favicon-file')
-		return {
-			'title' : get(meta, 'title', 'Blog'),
-			'annotation' : get(meta, 'annotation', 'Blogging for living'),
-			'favicon-file' : favicon_file ,
-			'favicon': 'favicon.ico' if favicon_file is not None else get(meta, 'favicon-url', "http://www.favicon.cc/favicon/169/1/favicon.png"),
-			'posts' : map((lambda rel : blog_file.parent / rel), get(meta, 'posts', [], False)),
-			'meta' : meta
-		}
-
+def generate(blog, args):
+	prepare_favicon(blog, args.target)
+	posts = map(read_post, blog['posts'])
+	for post in posts:
+		write_templated(args.templates / "post.template.html", args.target / post['link_base'], {'blog' : blog, 'posts': posts, 'post': post})			
+	write_templated(args.templates / "index.template.html", args.target / "index.html", {'blog' : blog, 
+		'posts':posts})
+		
 if __name__ == "__main__":
 	import argparse
 	from pathlib import Path
@@ -93,8 +88,8 @@ if __name__ == "__main__":
 	parser.add_argument('-templates', type=Path, help='directory with templates', default='templates')
 
 	args = parser.parse_args()
-	blog = blog_meta(args.blog)
-	prepare_directories(args)
+	blog = read_blog_meta(args.blog)
+	clean_target(args.target)
 	generate(blog, args)
 
 
