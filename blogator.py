@@ -37,10 +37,11 @@ def generate(blog, args):
 			post['short_title'] = get(row_post['meta'], 'short_title', post['title'])
 			post['link_base'] = get(row_post['meta'], 'link', post_file.with_suffix(".html").name)
 			post['link'] = './' + post['link_base']
-
-			posts.append(post)
-			write_templated(args.templates / "post.template.html", args.target / post['link_base'], post)			
-	write_templated(args.templates / "index.template.html", args.target / "index.html", {'posts':posts})
+			posts.append(post)		
+	for post in posts:
+		write_templated(args.templates / "post.template.html", args.target / post['link_base'], {'blog' : blog, 'posts': posts, 'post': post})			
+	write_templated(args.templates / "index.template.html", args.target / "index.html", {'blog' : blog, 
+		'posts':posts})
 		
 def prepare_directories(args):
 	import os
@@ -59,7 +60,7 @@ def blog_meta(blog_file):
 		meta = md.Meta.copy()
 		return {
 			'title' : get(meta, 'title', 'Blog'),
-			'motto' : get(meta, 'motto', 'Blogging for living'),
+			'annotation' : get(meta, 'annotation', 'Blogging for living'),
 			'posts' : map((lambda rel : blog_file.parent / rel), get(meta, 'posts', [], False)),
 			'meta' : meta
 		}
