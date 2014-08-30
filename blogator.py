@@ -40,8 +40,15 @@ def generate(args):
 			write_templated(args.templates / "post.template.html", args.target / post['link_base'], post)			
 	write_templated(args.templates / "index.template.html", args.target / "index.html", {'posts':posts})
 		
-def clean_dir(dir):
-	print ("cleaning")
+def prepare_directories(args):
+	import os
+	import glob
+	t = args.target.as_posix()
+	if not os.path.exists(t): os.makedirs(t)
+	files = glob.glob(t + '/*')
+	for f in files:
+		os.remove(f)
+
 
 if __name__ == "__main__":
 	import argparse
@@ -53,6 +60,8 @@ if __name__ == "__main__":
 	parser.add_argument('-templates', type=Path, help='directory with templates', default='templates')
 
 	args = parser.parse_args()
+
+	prepare_directories(args)
 	generate(parser.parse_args())
 
 
