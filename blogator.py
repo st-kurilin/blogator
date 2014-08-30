@@ -18,7 +18,7 @@ def read_post(inp):
 	}
 
 
-def generate(templates_dir, posts_dir, out_dir):
+def generate(args):
 	def get(map_of_lists, key, alt):
 		if key in map_of_lists:
 			if len(map_of_lists[key]) > 0:
@@ -26,7 +26,7 @@ def generate(templates_dir, posts_dir, out_dir):
 		return alt
 
 	posts = []
-	for post_file in posts_dir.iterdir():
+	for post_file in args.posts.iterdir():
 		with post_file.open() as fin:
 			row_post = read_post(fin.read())
 			post = {'meta' : row_post['meta'],
@@ -37,19 +37,23 @@ def generate(templates_dir, posts_dir, out_dir):
 			post['link'] = './' + post['link_base']
 
 			posts.append(post)
-			write_templated(templates_dir / "post.template.html", out_dir / post['link_base'], post)			
-	write_templated(templates_dir / "index.template.html", out_dir / "index.html", {'posts':posts})
+			write_templated(args.templates / "post.template.html", args.target / post['link_base'], post)			
+	write_templated(args.templates / "index.template.html", args.target / "index.html", {'posts':posts})
 		
 def clean_dir(dir):
 	print ("cleaning")
 
 if __name__ == "__main__":
+	import argparse
 	from pathlib import Path
-	from_dir = Path(sys.argv[1])
-	to_dir = Path(sys.argv[2])
-	templates_dir = Path(sys.argv[3])
 
-	generate(templates_dir, from_dir, to_dir)
+	parser = argparse.ArgumentParser(description='Generates static blog content from markdown posts.')
+	parser.add_argument('-posts', type=Path, help='directory with posts', default='posts')
+	parser.add_argument('-target', type=Path, help='generated content destination', default='target')
+	parser.add_argument('-templates', type=Path, help='directory with templates', default='templates')
+
+	args = parser.parse_args()
+	generate(parser.parse_args())
 
 
 
