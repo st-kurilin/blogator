@@ -60,7 +60,7 @@ def blog_meta(blog_file):
 		return {
 			'title' : get(meta, 'title', 'Blog'),
 			'motto' : get(meta, 'motto', 'Blogging for living'),
-			'posts' : map(Path, get(meta, 'posts', [], False)),
+			'posts' : map((lambda rel : blog_file.parent / rel), get(meta, 'posts', [], False)),
 			'meta' : meta
 		}
 
@@ -71,7 +71,6 @@ if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser(description='Generates static blog content from markdown posts.')
 	parser.add_argument('blog', type=Path, help='File with general information about blog', default='blog')
-	parser.add_argument('-posts', type=Path, help='directory with posts', default='posts')
 	parser.add_argument('-target', type=Path, help='generated content destination', default='target')
 	parser.add_argument('-templates', type=Path, help='directory with templates', default='templates')
 
