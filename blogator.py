@@ -74,12 +74,22 @@ def clean_target(target):
         os.remove(file)
 
 def generate(blog, p_args):
+    def marked_active_post(orig_posts, active_index):
+        active_post = posts[active_index]
+        posts_view = posts.copy()
+        active_post = posts[active_index].copy()
+        active_post['active?'] = True
+        posts_view[active_index] = active_post
+        return posts_view
+
     prepare_favicon(blog, p_args.target)
+
     posts = list(map(read_post, blog['posts']))
-    for post in posts:
+    for active_index, post in enumerate(posts):
+        posts_view = marked_active_post(posts, active_index)
         write_templated(p_args.templates / "post.template.html",
                         p_args.target / post['link_base'],
-                        {'blog': blog, 'posts': posts, 'post': post})
+                        {'blog': blog, 'posts': posts_view, 'post': post})
 
     write_templated(p_args.templates / "index.template.html",
                     p_args.target / "index.html",

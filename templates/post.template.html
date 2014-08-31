@@ -32,7 +32,6 @@
         </h1>
         <p class="lead">{{blog.annotation}}</p>
       </div>
-
       <div class="row">
         <div class="col-md-2"> </div>
         <div class="col-md-7">
@@ -40,10 +39,17 @@
             {{{post.content}}}
         </div>
         <div class="col-md-3">
-          {{#posts}}
-            <a href="{{link}}">{{short_title}}</a>
-            <br/>
-          {{/posts}}
+          <h3>&nbsp;</h3>
+          <ul class="nav nav-pills nav-stacked">
+            {{#posts}}
+            {{#active?}}
+              <li class="active"><a href="#">{{short_title}}</a></li>
+            {{/active?}}
+            {{^active?}}
+              <li><a href="{{link}}">{{short_title}}</a></li>
+            {{/active?}}
+            {{/posts}}
+          </ul>
         </div>
       </div>
     </div> <!-- /container -->
