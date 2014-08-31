@@ -47,13 +47,14 @@ def read_post(post_file_path):
     with post_file_path.open() as fin:
         row_post = md_read(fin.read())
         post = {}
-        post['meta'] = row_post['meta']
+        post['meta'] = meta = row_post['meta']
         post['content'] = row_post['content']
-        post['title'] = md_meta_get(row_post['meta'], 'title',
+        post['title'] = md_meta_get(meta, 'title',
                                     post_file_path.with_suffix("._").name)
-        post['short_title'] = md_meta_get(row_post['meta'], 'short_title',
+        post['brief'] = md_meta_get(meta, 'brief')
+        post['short_title'] = md_meta_get(meta, 'short_title',
                                           post['title'])
-        post['link_base'] = md_meta_get(row_post['meta'], 'link',
+        post['link_base'] = md_meta_get(meta, 'link',
                                         post_file_path.with_suffix(".html").name)
         post['link'] = './' + post['link_base']
         return post

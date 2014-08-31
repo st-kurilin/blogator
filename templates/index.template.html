@@ -37,7 +37,12 @@
             <h3>
               <a href="{{link}}">{{title}}</a>
             </h3>
-            {{{content}}}
+            {{#brief}}
+              <a href="{{link}}">{{{brief}}}</a>
+            {{/brief}}
+            {{^brief}}
+              {{{content}}}
+            {{/brief}}
         	{{/posts}}
         </div>
         <div class="col-md-1">
