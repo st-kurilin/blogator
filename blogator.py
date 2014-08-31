@@ -10,7 +10,7 @@ def md_read(inp):
 def md_meta_get(meta, key, alt=None, single_value=True):
     if key in meta:
         if single_value:
-            if len(meta[key]) > 0:
+            if meta[key]:
                 return meta[key][0]
         else:
             return meta[key]
@@ -44,6 +44,7 @@ def read_blog_meta(blog_file_path):
         }
 
 def read_post(post_file_path):
+    import datetime
     with post_file_path.open() as fin:
         row_post = md_read(fin.read())
         post = {}
@@ -57,6 +58,10 @@ def read_post(post_file_path):
         post['link_base'] = md_meta_get(meta, 'link',
                                         post_file_path.with_suffix(".html").name)
         post['link'] = './' + post['link_base']
+        published_str = md_meta_get(row_post['meta'], 'published')
+        if published_str:
+            published = datetime.datetime.strptime(published_str, '%Y-%m-%d')
+            post['published'] = published.strftime('%d %b %Y')
         return post
 
 def prepare_favicon(blog, target_dir):
