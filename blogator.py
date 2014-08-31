@@ -24,22 +24,19 @@ def write_templated(template_path, out_path, data):
     outs.write(renderer.render(template, data))
 
 def read_blog_meta(blog_file_path):
-    import markdown
-    md_converter = markdown.Markdown(extensions=['meta'])
     with blog_file_path.open() as fin:
-        md_converter.convert(fin.read())
-        meta = md_converter.Meta.copy()
+        meta = md_read(fin.read())['meta']
         favicon_file = md_meta_get(meta, 'favicon-file')
-        favicon_url = 'favicon.ico' if favicon_file else md_meta_get(meta, 'favicon-url', 
-                                                                     "http://www.favicon.cc/favicon/169/1/favicon.png")
+        favicon_url = md_meta_get(meta, 'favicon-url',
+                                  "favicon.cc/favicon/169/1/favicon.png")
         return {
             'title'        : md_meta_get(meta, 'title', 'Blog'),
             'annotation'   : md_meta_get(meta, 'annotation',
                                          'Blogging for living'),
             'favicon-file' : favicon_file,
-            'favicon'      : favicon_url,
-            'posts'        : map((lambda rel: blog_file_path.parent / rel), 
-                                 md_meta_get(meta, 'posts', [], False)),
+            'favicon'      : 'favicon.ico' if favicon_file else favicon_url,
+            'posts'        : [blog_file_path.parent / ref for ref in
+                              md_meta_get(meta, 'posts', [], False)],
             'meta'         : meta
         }
 
@@ -75,22 +72,23 @@ def clean_target(target):
     import os
     import glob
     tpath = target.as_posix()
-    if not os.path.exists(tpath): os.makedirs(tpath)
+    if not os.path.exists(tpath):
+        os.makedirs(tpath)
     for file in glob.glob(tpath + '/*'):
         os.remove(file)
 
 def generate(blog, p_args):
     def marked_active_post(orig_posts, active_index):
-        active_post = posts[active_index]
-        posts_view = posts.copy()
-        active_post = posts[active_index].copy()
+        active_post = orig_posts[active_index]
+        posts_view = orig_posts.copy()
+        active_post = orig_posts[active_index].copy()
         active_post['active?'] = True
         posts_view[active_index] = active_post
         return posts_view
 
     prepare_favicon(blog, p_args.target)
 
-    posts = list(map(read_post, blog['posts']))
+    posts = [read_post(_) for _ in blog['posts']]
     for active_index, post in enumerate(posts):
         posts_view = marked_active_post(posts, active_index)
         write_templated(p_args.templates / "post.template.html",
@@ -122,9 +120,9 @@ if __name__ == "__main__":
                         default='templates')
 
     args = parser.parse_args()
-    blog = read_blog_meta(args.blog)
+    blog_meta = read_blog_meta(args.blog)
     clean_target(args.target)
-    generate(blog, args)
+    generate(blog_meta, args)
 
 
 
