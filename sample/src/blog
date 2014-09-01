@@ -1,5 +1,6 @@
 title:           Blogging 
 annotation:      keep calm and blog on
 favicon-file:    redghost.ico
+ganalitics:      UA-54347170-1
 posts:           intro.md
                  history.md

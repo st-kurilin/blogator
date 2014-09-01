@@ -37,7 +37,8 @@ def read_blog_meta(blog_file_path):
             'favicon'      : 'favicon.ico' if favicon_file else favicon_url,
             'posts'        : [blog_file_path.parent / ref for ref in
                               md_meta_get(meta, 'posts', [], False)],
-            'meta'         : meta
+            'meta'         : meta,
+            'tracking_code': md_meta_get(meta, 'ganalitics'),
         }
 
 def read_post(post_file_path):
