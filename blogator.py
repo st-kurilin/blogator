@@ -1,4 +1,9 @@
+"""Static blogs generator.
+   See https://github.com/st-kurilin/blogator for details.
+"""
+
 def md_read(inp):
+    """Reads markdown formatted message."""
     import markdown
     md_converter = markdown.Markdown(extensions=['meta'])
     content = md_converter.convert(inp)
@@ -8,6 +13,7 @@ def md_read(inp):
     }
 
 def md_meta_get(meta, key, alt=None, single_value=True):
+    """Reads value from markdown read message meta."""
     if key in meta:
         if single_value:
             if meta[key]:
@@ -17,6 +23,7 @@ def md_meta_get(meta, key, alt=None, single_value=True):
     return alt
 
 def write_templated(template_path, out_path, data):
+    """Generate templated content to file."""
     import pystache
     outs = out_path.open('w')
     template = pystache.parse(template_path.open('r').read())
@@ -24,52 +31,62 @@ def write_templated(template_path, out_path, data):
     outs.write(renderer.render(template, data))
 
 def read_blog_meta(blog_file_path):
+    """Reads general blog info from file."""
+    from functools import partial
     with blog_file_path.open() as fin:
         meta = md_read(fin.read())['meta']
-        favicon_file = md_meta_get(meta, 'favicon-file')
-        favicon_url = md_meta_get(meta, 'favicon-url',
-                                  "favicon.cc/favicon/169/1/favicon.png")
+        get = partial(md_meta_get, meta)
+        favicon_file = get('favicon-file')
+        favicon_url = get('favicon-url', "favicon.cc/favicon/169/1/favicon.png")
         return {
-            'title'        : md_meta_get(meta, 'title', 'Blog'),
-            'annotation'   : md_meta_get(meta, 'annotation',
-                                         'Blogging for living'),
+            'meta'         : meta,
+            'title'        : get('title', 'Blog'),
+            'annotation'   : get('annotation', 'Blogging for living'),
             'favicon-file' : favicon_file,
             'favicon'      : 'favicon.ico' if favicon_file else favicon_url,
             'posts'        : [blog_file_path.parent / ref for ref in
-                              md_meta_get(meta, 'posts', [], False)],
-            'meta'         : meta,
+                              get('posts', [], False)],
             'tracking_code': md_meta_get(meta, 'ganalitics'),
+            'home-dir'     : blog_file_path.parent
         }
 
 def read_post(post_file_path):
+    """Reads post info from file."""
     import datetime
+    from functools import partial
+
+    def reformat_date(inpf, outf, date):
+        """Reformats dates from one specified format to other one."""
+        if date is None:
+            return None
+        return datetime.datetime.strptime(date, inpf).strftime(outf)
+
     with post_file_path.open() as fin:
         row_post = md_read(fin.read())
         post = {}
         post['meta'] = meta = row_post['meta']
+        get = partial(md_meta_get, meta)
         post['content'] = row_post['content']
-        post['title'] = md_meta_get(meta, 'title',
-                                    post_file_path.with_suffix("._").name)
-        post['brief'] = md_meta_get(meta, 'brief')
-        post['short_title'] = md_meta_get(meta, 'short_title',
-                                          post['title'])
-        post['link_base'] = md_meta_get(meta, 'link',
-                                        post_file_path.with_suffix(".html").name)
+        post['title'] = get('title', post_file_path.with_suffix("._").name)
+        post['brief'] = get('brief')
+        post['short_title'] = get('short_title', post['title'])
+        post['link_base'] = get('link',
+                                post_file_path.with_suffix(".html").name)
         post['link'] = './' + post['link_base']
-        published_str = md_meta_get(row_post['meta'], 'published')
-        if published_str:
-            published = datetime.datetime.strptime(published_str, '%Y-%m-%d')
-            post['published'] = published.strftime('%d %b %Y')
+        post['published'] = reformat_date('%Y-%m-%d', '%d %b %Y',
+                                          get('published'))
         return post
 
-def prepare_favicon(blog, target_dir):
+def prepare_favicon(blog, target):
+    """Puts favicon file in right place with right name."""
     import shutil
     if blog['favicon-file'] is not None:
-        orig_path = args.blog.parent / blog['favicon-file']
-        destination_path = target_dir / 'favicon.ico'
+        orig_path = blog['home-dir'] / blog['favicon-file']
+        destination_path = target / 'favicon.ico'
         shutil.copyfile(orig_path.as_posix(), destination_path.as_posix())
 
 def clean_target(target):
+    """Cleans target directory. Hidden files will not be deleted."""
     import os
     import glob
     tpath = target.as_posix()
@@ -78,8 +95,12 @@ def clean_target(target):
     for file in glob.glob(tpath + '/*'):
         os.remove(file)
 
-def generate(blog, p_args):
+def generate(blog, templates, target):
+    """Generates blog content. Target directory expected to be empty."""
+
     def marked_active_post(orig_posts, active_index):
+        """Returns copy of original posts
+        with specified post marked as active"""
         active_post = orig_posts[active_index]
         posts_view = orig_posts.copy()
         active_post = orig_posts[active_index].copy()
@@ -87,20 +108,21 @@ def generate(blog, p_args):
         posts_view[active_index] = active_post
         return posts_view
 
-    prepare_favicon(blog, p_args.target)
+    prepare_favicon(blog, target)
 
     posts = [read_post(_) for _ in blog['posts']]
     for active_index, post in enumerate(posts):
         posts_view = marked_active_post(posts, active_index)
-        write_templated(p_args.templates / "post.template.html",
-                        p_args.target / post['link_base'],
+        write_templated(templates / "post.template.html",
+                        target / post['link_base'],
                         {'blog': blog, 'posts': posts_view, 'post': post})
 
-    write_templated(p_args.templates / "index.template.html",
-                    p_args.target / "index.html",
+    write_templated(templates / "index.template.html",
+                    target / "index.html",
                     {'blog' : blog, 'posts': posts})
 
-if __name__ == "__main__":
+def create_parser():
+    """Parser factory method."""
     import argparse
     from pathlib import Path
 
@@ -119,11 +141,12 @@ if __name__ == "__main__":
                         type=Path,
                         help='directory with templates',
                         default='templates')
+    return parser
 
-    args = parser.parse_args()
-    blog_meta = read_blog_meta(args.blog)
-    clean_target(args.target)
-    generate(blog_meta, args)
+if __name__ == "__main__":
+    ARGS = create_parser().parse_args()
+    clean_target(ARGS.target)
+    generate(read_blog_meta(ARGS.blog), ARGS.templates, ARGS.target)
 
 
 
