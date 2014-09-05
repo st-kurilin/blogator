@@ -8,7 +8,7 @@ def md_read(inp):
     md_converter = markdown.Markdown(extensions=['meta'])
     content = md_converter.convert(inp)
     return {
-        'meta' : md_converter.Meta.copy(),
+        'meta' : md_converter.__getattribute__('Meta') if hasattr(md_converter, 'Meta') else [],
         'content' : content
     }
 
