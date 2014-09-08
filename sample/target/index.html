@@ -22,11 +22,19 @@
     <![endif]-->
 
     <style type="text/css">
-        .published {
+        .post-date {
             display: block;
             margin-top: -.5rem;
             margin-bottom: 1rem;
             color: #9a9a9a;
+        }
+
+        .post-brief {
+          color: rgb(48, 48, 48);
+        }
+
+        .post-title a {
+          color: rgb(48, 48, 48);
         }
     </style>
   </head>
@@ -40,16 +48,30 @@
       <div class="row">
         <div class="col-md-2"> </div>
         <div class="col-md-7">
-            <h3>
+            <h3 class="post-title">
               <a href="./about.html">About blog</a>
             </h3>
-            <span class="published">31 Aug 2014</span>
-              <a href="./about.html">What blog is and where it come from. Copy paste from wikipedia.</a>
-            <h3>
+            <span class="post-date">31 Aug 2014</span>
+              <a href="./about.html">
+                <span class="post-brief">What blog is and where it come from. Copy paste from wikipedia.</span> 
+                <button type="button" class="btn btn-default btn-xs">
+                  <span class="glyphicon glyphicon-chevron-right"></span>
+                </button>
+              </a> 
+            <h3 class="post-title">
               <a href="./history.html">History of blogs</a>
             </h3>
               <p>The term "weblog" was coined by <a href="http://en.wikipedia.org/wiki/Jorn_Barger">Jorn Barger</a> on 17 December 1997. The short form, "blog", was coined by Peter Merholz, who jokingly broke the word weblog into the phrase we blog in the sidebar of his blog Peterme.com in April or May 1999. Shortly thereafter, Evan Williams at Pyra Labs used "blog" as both a noun and verb ("to blog", meaning "to edit one's weblog or to post to one's weblog") and devised the term "blogger" in connection with Pyra Labs' Blogger product, leading to the popularization of the terms.</p>
 <p><a href="http://en.wikipedia.org/wiki/Blog">Source</a></p>
+            <h3 class="post-title">
+              <a href="./popularity.html">Mainstream popularity</a>
+            </h3>
+              <a href="./popularity.html">
+                <span class="post-brief">By 2004, the role of blogs became increasingly mainstream, as political consultants, news services, and candidates began using them as tools for outreach and opinion forming. Blogging was established by politicians and political candidates to express opinions on war and other issues and cemented blogs' role as a news source. (See Howard Dean and Wesley Clark.) Even politicians not actively campaigning, such as the Tom Watson, began to blog to bond with constituents.</span> 
+                <button type="button" class="btn btn-default btn-xs">
+                  <span class="glyphicon glyphicon-chevron-right"></span>
+                </button>
+              </a> 
         </div>
         <div class="col-md-1">
         </div>

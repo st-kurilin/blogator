@@ -6,12 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-    {{#blog.favicon}}
-    <link rel="icon" href="{{blog.favicon}}">
-    {{/blog.favicon}}
+    <link rel="icon" href="favicon.ico">
 
-    <title>{{blog.title}}</title>
+    <title>Mainstream popularity - Blogging</title>
 
+   
     <!-- Bootstrap core CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
@@ -31,61 +30,45 @@
             color: #9a9a9a;
         }
 
-        .post-brief {
+        .blog-title a, .post-title a {
           color: rgb(48, 48, 48);
         }
 
-        .post-title a {
-          color: rgb(48, 48, 48);
-        }
+        
     </style>
   </head>
   <body>
     <div class="container">
       <div class="page-header">
-        <h1>{{blog.title}}</h1>
-        <p class="lead">{{blog.annotation}}</p>
+        <h1 class="blog-title">
+          <a href="index.html">Blogging</a>
+        </h1>
+        <p class="lead">keep calm and blog on</p>
       </div>
-
       <div class="row">
         <div class="col-md-2"> </div>
         <div class="col-md-7">
-        	{{#posts}}
-            <h3 class="post-title">
-              <a href="{{link}}">{{title}}</a>
-            </h3>
-            {{#published}}
-            <span class="post-date">{{published}}</span>
-            {{/published}}
-            {{#brief}}
-              <a href="{{link}}">
-                <span class="post-brief">{{{brief}}}</span> 
-                <button type="button" class="btn btn-default btn-xs">
-                  <span class="glyphicon glyphicon-chevron-right"></span>
-                </button>
-              </a> 
-            {{/brief}}
-            {{^brief}}
-              {{{content}}}
-            {{/brief}}
-        	{{/posts}}
+            <h3 class="post-title">Mainstream popularity</h3>
+            <p>Exception should be thrown for empty content.</p>
         </div>
-        <div class="col-md-1">
-        </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
+          <h3>&nbsp;</h3>
+          <ul class="nav nav-pills nav-stacked">
+              <li><a href="./about.html">About blog</a></li>
+              <li><a href="./history.html">History of blogs</a></li>
+              <li class="active"><a href="#">Mainstream popularity</a></li>
+          </ul>
         </div>
       </div>
     </div> <!-- /container -->
-    {{#blog.tracking_code}}
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-      ga('create', '{{blog.tracking_code}}', 'auto');
+      ga('create', 'UA-54347170-1', 'auto');
       ga('send', 'pageview');
     </script>
-    {{/blog.tracking_code}}
   </body>
 </html>

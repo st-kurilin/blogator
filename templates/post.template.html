@@ -25,18 +25,24 @@
     <![endif]-->
 
     <style type="text/css">
-        .published {
+        .post-date {
             display: block;
             margin-top: -.5rem;
             margin-bottom: 1rem;
             color: #9a9a9a;
         }
+
+        .blog-title a, .post-title a {
+          color: rgb(48, 48, 48);
+        }
+
+        
     </style>
   </head>
   <body>
     <div class="container">
       <div class="page-header">
-        <h1>
+        <h1 class="blog-title">
           <a href="index.html">{{blog.title}}</a>
         </h1>
         <p class="lead">{{blog.annotation}}</p>
@@ -44,9 +50,9 @@
       <div class="row">
         <div class="col-md-2"> </div>
         <div class="col-md-7">
-            <h3>{{post.title}}</h3>
+            <h3 class="post-title">{{post.title}}</h3>
             {{#post.published}}
-            <span class="published">{{post.published}}</span>
+            <span class="post-date">{{post.published}}</span>
             {{/post.published}}
             {{{post.content}}}
         </div>
