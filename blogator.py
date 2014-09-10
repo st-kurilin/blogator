@@ -40,14 +40,15 @@ def read_blog_meta(blog_file_path):
         favicon_url = get('favicon-url', "favicon.cc/favicon/169/1/favicon.png")
         return {
             'meta'         : meta,
+             'home-dir'    : blog_file_path.parent,
             'title'        : get('title', 'Blog'),
             'annotation'   : get('annotation', 'Blogging for living'),
             'favicon-file' : favicon_file,
             'favicon'      : 'favicon.ico' if favicon_file else favicon_url,
             'posts'        : [blog_file_path.parent / ref for ref in
                               get('posts', [], False)],
-            'tracking_code': md_meta_get(meta, 'ganalitics'),
-            'home-dir'     : blog_file_path.parent
+            'disqus'       : get('disqus'),
+            'ganalitics'   : md_meta_get(meta, 'ganalitics'),
         }
 
 def read_post(post_file_path):
