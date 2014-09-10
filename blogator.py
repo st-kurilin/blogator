@@ -7,8 +7,9 @@ def md_read(inp):
     import markdown
     md_converter = markdown.Markdown(extensions=['meta'])
     content = md_converter.convert(inp)
+    meta = getattr(md_converter, 'Meta', [])
     return {
-        'meta' : md_converter.__getattribute__('Meta') if hasattr(md_converter, 'Meta') else [],
+        'meta' : meta,
         'content' : content
     }
 
@@ -40,7 +41,7 @@ def read_blog_meta(blog_file_path):
         favicon_url = get('favicon-url', "favicon.cc/favicon/169/1/favicon.png")
         return {
             'meta'         : meta,
-             'home-dir'    : blog_file_path.parent,
+            'home-dir'     : blog_file_path.parent,
             'title'        : get('title', 'Blog'),
             'annotation'   : get('annotation', 'Blogging for living'),
             'favicon-file' : favicon_file,
@@ -148,10 +149,3 @@ if __name__ == "__main__":
     ARGS = create_parser().parse_args()
     clean_target(ARGS.target)
     generate(read_blog_meta(ARGS.blog), ARGS.templates, ARGS.target)
-
-
-
-
-
-
-
