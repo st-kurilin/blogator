@@ -1,7 +1,10 @@
-"""Static blogs generator. Tests
-   See https://github.com/st-kurilin/blogator for details.
 """
-import blogator as b
+Static blogs generator. Tests
+See https://github.com/st-kurilin/blogator for details.
+
+Unit tests.
+"""
+import blogator_src as b
 import unittest
 from pathlib import Path
 

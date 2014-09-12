@@ -1,5 +1,8 @@
-"""Static blogs generator.
-   See https://github.com/st-kurilin/blogator for details.
+"""
+Static blogs generator.
+See https://github.com/st-kurilin/blogator for details.
+
+Main script. Used to build final script using build.py script.
 """
 
 def read(path):
