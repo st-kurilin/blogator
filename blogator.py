@@ -2,6 +2,16 @@
    See https://github.com/st-kurilin/blogator for details.
 """
 
+def read(path):
+    """Reads file content from FS"""
+    with open(path.as_posix(), 'r') as file:
+        return file.read()
+
+def write(path, content):
+    """Writes file content to FS"""
+    with open(path.as_posix(), 'w') as file:
+        file.write(content)
+
 def md_read(inp):
     """Reads markdown formatted message."""
     import markdown
@@ -23,36 +33,32 @@ def md_meta_get(meta, key, alt=None, single_value=True):
             return meta[key]
     return alt
 
-def write_templated(template_path, out_path, data):
-    """Generate templated content to file."""
+def pystached(template, data):
+    """Applies data to pystache template"""
     import pystache
-    outs = out_path.open('w')
-    template = pystache.parse(template_path.open('r').read())
-    renderer = pystache.Renderer()
-    outs.write(renderer.render(template, data))
+    pys_template = pystache.parse(template)
+    pys_renderer = pystache.Renderer()
+    return pys_renderer.render(pys_template, data)
 
-def read_blog_meta(blog_file_path):
+def parse_blog_meta(blog_meta_content):
     """Reads general blog info from file."""
     from functools import partial
-    with blog_file_path.open() as fin:
-        meta = md_read(fin.read())['meta']
-        get = partial(md_meta_get, meta)
-        favicon_file = get('favicon-file')
-        favicon_url = get('favicon-url', "favicon.cc/favicon/169/1/favicon.png")
-        return {
-            'meta'         : meta,
-            'home-dir'     : blog_file_path.parent,
-            'title'        : get('title', 'Blog'),
-            'annotation'   : get('annotation', 'Blogging for living'),
-            'favicon-file' : favicon_file,
-            'favicon'      : 'favicon.ico' if favicon_file else favicon_url,
-            'posts'        : [blog_file_path.parent / ref for ref in
-                              get('posts', [], False)],
-            'disqus'       : get('disqus'),
-            'ganalitics'   : md_meta_get(meta, 'ganalitics'),
-        }
+    meta = md_read(blog_meta_content)['meta']
+    get = partial(md_meta_get, meta)
+    favicon_file = get('favicon-file')
+    favicon_url = get('favicon-url', "favicon.cc/favicon/169/1/favicon.png")
+    return {
+        'meta'         : meta,
+        'title'        : get('title', 'Blog'),
+        'annotation'   : get('annotation', 'Blogging for living'),
+        'favicon-file' : favicon_file,
+        'favicon'      : 'favicon.ico' if favicon_file else favicon_url,
+        'posts'        : get('posts', [], False),
+        'disqus'       : get('disqus'),
+        'ganalitics'   : get('ganalitics'),
+    }
 
-def read_post(post_file_path):
+def parse_post(post_blob, post_blob_orig_name):
     """Reads post info from file."""
     import datetime
     from functools import partial
@@ -63,27 +69,25 @@ def read_post(post_file_path):
             return None
         return datetime.datetime.strptime(date, inpf).strftime(outf)
 
-    with post_file_path.open() as fin:
-        row_post = md_read(fin.read())
-        post = {}
-        post['meta'] = meta = row_post['meta']
-        get = partial(md_meta_get, meta)
-        post['content'] = row_post['content']
-        post['title'] = get('title', post_file_path.with_suffix("._").name)
-        post['brief'] = get('brief')
-        post['short_title'] = get('short_title', post['title'])
-        post['link_base'] = get('link',
-                                post_file_path.with_suffix(".html").name)
-        post['link'] = './' + post['link_base']
-        post['published'] = reformat_date('%Y-%m-%d', '%d %b %Y',
-                                          get('published'))
-        return post
+    row_post = md_read(post_blob)
+    post = {}
+    post['meta'] = meta = row_post['meta']
+    get = partial(md_meta_get, meta)
+    post['content'] = row_post['content']
+    post['title'] = get('title', post_blob_orig_name)
+    post['brief'] = get('brief')
+    post['short_title'] = get('short_title', post['title'])
+    post['link_base'] = get('link', post_blob_orig_name + ".html")
+    post['link'] = './' + post['link_base']
+    post['published'] = reformat_date('%Y-%m-%d', '%d %b %Y',
+                                      get('published'))
+    return post
 
-def prepare_favicon(blog, target):
+def prepare_favicon(blog, blog_home_dir, target):
     """Puts favicon file in right place with right name."""
     import shutil
     if blog['favicon-file'] is not None:
-        orig_path = blog['home-dir'] / blog['favicon-file']
+        orig_path = blog_home_dir / blog['favicon-file']
         destination_path = target / 'favicon.ico'
         shutil.copyfile(orig_path.as_posix(), destination_path.as_posix())
 
@@ -97,7 +101,7 @@ def clean_target(target):
     for file in glob.glob(tpath + '/*'):
         os.remove(file)
 
-def generate(blog, templates, target):
+def generate(blog_path, templates, target):
     """Generates blog content. Target directory expected to be empty."""
 
     def marked_active_post(orig_posts, active_index):
@@ -110,9 +114,19 @@ def generate(blog, templates, target):
         posts_view[active_index] = active_post
         return posts_view
 
-    prepare_favicon(blog, target)
+    def write_templated(template_path, out_path, data):
+        """Generate templated content to file."""
+        write(out_path, pystached(read(template_path), data))
 
-    posts = [read_post(_) for _ in blog['posts']]
+    def fname(file_name):
+        """file name without suffix. TODO: handle complex paths"""
+        return file_name.split(".")[0]
+
+    blog = parse_blog_meta(read(blog_path))
+
+    prepare_favicon(blog, blog_path.parent, target)
+    posts = [parse_post(read(blog_path.parent / _), fname(_))
+             for _ in blog['posts']]
     for active_index, post in enumerate(posts):
         posts_view = marked_active_post(posts, active_index)
         write_templated(templates / "post.template.html",
@@ -148,4 +162,4 @@ def create_parser():
 if __name__ == "__main__":
     ARGS = create_parser().parse_args()
     clean_target(ARGS.target)
-    generate(read_blog_meta(ARGS.blog), ARGS.templates, ARGS.target)
+    generate(ARGS.blog, ARGS.templates, ARGS.target)
