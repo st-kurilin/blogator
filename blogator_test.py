@@ -1,5 +1,5 @@
 """
-Static blogs generator. Tests
+Static blogs generator.
 See https://github.com/st-kurilin/blogator for details.
 
 Unit tests.

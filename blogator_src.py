@@ -1,9 +1,9 @@
-"""
-Static blogs generator.
-See https://github.com/st-kurilin/blogator for details.
-
-Main script. Used to build final script using build.py script.
-"""
+#
+#Static blogs generator.
+#See https://github.com/st-kurilin/blogator for details.
+#
+#Main script. Used to build final script using build.py script.
+#
 
 def read(path):
     """Reads file content from FS"""
@@ -162,7 +162,10 @@ def create_parser():
                         default='templates')
     return parser
 
-if __name__ == "__main__":
-    ARGS = create_parser().parse_args()
-    clean_target(ARGS.target)
-    generate(ARGS.blog, ARGS.templates, ARGS.target)
+def main():
+    """Start endpoint"""
+    args = create_parser().parse_args()
+    clean_target(args.target)
+    generate(args.blog, args.templates, args.target)
+
+
