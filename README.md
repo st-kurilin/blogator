@@ -14,8 +14,9 @@ To serve it we provide simple [Python][py] script that will generates content fr
 
  To start use it you need to perform just few steps
 
-  1. Install blogator (**TODO:** will be described latter).
-  2. Create file that will describe your blog. It could be as simple as
+  1. Download [blogator script][bl-distrib]
+  2. Install dependencies with `pip3 install markdown` and `pip3 install pystache` commands
+  3. Create file *BLOG_FILE* that will describe your blog. It could be as simple as
 
         title:           Blogging 
         annotation:      keep calm and blog on
@@ -23,13 +24,13 @@ To serve it we provide simple [Python][py] script that will generates content fr
                          history.md
                          popularity.md
 
-  3. Create files with posts for `intro.md`, `history.md`, `popularity.md`. The could be as simple as
+  4. Create files with posts for `intro.md`, `history.md`, `popularity.md`. The could be as simple as
 
         title: About blog
         My blog entry
 
-  4. Generate content: `python3 blogator.py  PATH_TO_BLOG_FILE -target OUTPUT_DIR`.
-  5. Publish `OUTPUT_DIR` content.
+  5. Generate content: `python3 blogator.py BLOG_FILE -target OUTPUT_DIR`.
+  6. Done! Generated content is now in *OUTPUT_DIR*.
   
 
 Website Trafic's Statistic
@@ -72,6 +73,20 @@ System requerements
 We use `Python 3.4.1` for development. We do not test it on other Python versions. I assume that it should work fine for Python >= 3.2. Dependencies could be installed with `pip3 install -r requirements.txt` (**TODO:** revisit installiation)
 
 
+Contribute
+_____
+Prerequirements are:
+ - Installed git and created github account
+ - Installed Python 3.4.+, pip3, [pylint][pylint]
+ - Fork https://github.com/st-kurilin/blogator
+ - Run `pip3 install -r requirements.txt` to install all dependencies
+ - Make your changes. We use `blogator_src` as a main script. To build a distributable script run `build.py`. 
+ - Make sure you pass tests from `blogator_test.py`. You can add more there as well.
+ - Run pylint and make sure you leave the project better than you found it
+ - Create a pull request
+
+
+ [bl-distrib]: https://github.com/st-kurilin/blogator/blob/master/blogator.py
  [disqus]: https://disqus.com
  [github-pages]: https://pages.github.com/
  [github-new]: https://github.com/join
@@ -82,3 +97,4 @@ We use `Python 3.4.1` for development. We do not test it on other Python version
  [wg]: https://en.wikipedia.org/wiki/WYSIWYG
  [md]: https://en.wikipedia.org/wiki/Markdown
  [py]: https://www.python.org
+ [pylint]: https://www.pylint.org
