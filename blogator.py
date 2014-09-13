@@ -1,4 +1,3 @@
-
 """
 Static blogs generator.
 
@@ -6,9 +5,7 @@ This file was generated. Do not edit it directly.
 See https://github.com/st-kurilin/blogator for details.
 
 """
-
-#__ignore comment bellow__
-#
+#__ignore comment bellow__#
 #Static blogs generator.
 #See https://github.com/st-kurilin/blogator for details.
 #
@@ -17,6 +14,8 @@ See https://github.com/st-kurilin/blogator for details.
 
 def read(path):
     """Reads file content from FS"""
+    if path in VIRTUAL_FS:
+        return VIRTUAL_FS[path]
     with open(path.as_posix(), 'r') as file:
         return file.read()
 
@@ -169,8 +168,10 @@ def create_parser():
     parser.add_argument('-templates',
                         type=Path,
                         help='directory with templates',
-                        default='templates')
+                        default='blogtor-virtual/templates')
     return parser
+
+VIRTUAL_FS = dict()
 
 def main():
     """Start endpoint"""
@@ -178,6 +179,190 @@ def main():
     clean_target(args.target)
     generate(args.blog, args.templates, args.target)
 
+def fill_vitual_fs(): 
+    """Fills virtual fs with default values"""
+    from pathlib import Path
+    VIRTUAL_FS[Path('blogtor-virtual') / 'templates' / 'index.template.html'] = """<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    {{#blog.favicon}}
+    <link rel="icon" href="{{blog.favicon}}">
+    {{/blog.favicon}}
 
+    <title>{{blog.title}}</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="http://getbootstrap.com/ie10-viewport-bug-workaround.js"></script>
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <style type="text/css">
+        .post-date {
+            display: block;
+            margin-top: -.5rem;
+            margin-bottom: 1rem;
+            color: #9a9a9a;
+        }
+
+        .post-brief {
+          color: rgb(48, 48, 48);
+        }
+
+        .post-title a {
+          color: rgb(48, 48, 48);
+        }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-header">
+        <h1>{{blog.title}}</h1>
+        <p class="lead">{{blog.annotation}}</p>
+      </div>
+
+      <div class="row">
+        <div class="col-md-2"> </div>
+        <div class="col-md-7">
+        	{{#posts}}
+            <h3 class="post-title">
+              <a href="{{link}}">{{title}}</a>
+            </h3>
+            {{#published}}
+            <span class="post-date">{{published}}</span>
+            {{/published}}
+            {{#brief}}
+              <a href="{{link}}">
+                <span class="post-brief">{{{brief}}}</span> 
+                <button type="button" class="btn btn-default btn-xs">
+                  <span class="glyphicon glyphicon-chevron-right"></span>
+                </button>
+              </a> 
+            {{/brief}}
+            {{^brief}}
+              {{{content}}}
+            {{/brief}}
+        	{{/posts}}
+        </div>
+        <div class="col-md-1">
+        </div>
+        <div class="col-md-2">
+        </div>
+      </div>
+    </div> <!-- /container -->
+    {{#blog.tracking_code}}
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', '{{blog.tracking_code}}', 'auto');
+      ga('send', 'pageview');
+    </script>
+    {{/blog.tracking_code}}
+  </body>
+</html>
+"""
+    VIRTUAL_FS[Path('blogtor-virtual') / 'templates' / 'post.template.html'] = """<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    {{#blog.favicon}}
+    <link rel="icon" href="{{blog.favicon}}">
+    {{/blog.favicon}}
+
+    <title>{{post.title}} - {{blog.title}}</title>
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+        .post-date {
+            display: block;
+            margin-top: -.5rem;
+            margin-bottom: 1rem;
+            color: #9a9a9a;
+        }
+
+        .blog-title a, .post-title a {
+          color: rgb(48, 48, 48);
+        }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-header">
+        <h1 class="blog-title">
+          <a href="index.html">{{blog.title}}</a>
+        </h1>
+        <p class="lead">{{blog.annotation}}</p>
+      </div>
+      <div class="row">
+        <div class="col-md-2"> </div>
+        <div class="col-md-7">
+            <h3 class="post-title">{{post.title}}</h3>
+            {{#post.published}}
+            <span class="post-date">{{post.published}}</span>
+            {{/post.published}}
+            {{{post.content}}}
+
+            {{#blog.disqus}}
+            <div id="disqus_thread"></div>
+            <script type="text/javascript">
+                var disqus_shortname = document.location.hostname === ""  ? window.location.href : "{{blog.disqus}}"; 
+                (function() {
+                    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; 
+                    dsq.async = true;
+                    dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+                    dsq.id = 'disqus';
+                    (document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+            </script>
+            <noscript>Please enable JavaScript to view the comments.</a></noscript>
+            {{/blog.disqus}}
+        </div>
+        <div class="col-md-3">
+          <h3>&nbsp;</h3>
+          <ul class="nav nav-pills nav-stacked">
+            {{#posts}}
+            {{#active?}}
+              <li class="active"><a href="#">{{short_title}}</a></li>
+            {{/active?}}
+            {{^active?}}
+              <li><a href="{{link}}">{{short_title}}</a></li>
+            {{/active?}}
+            {{/posts}}
+          </ul>
+        </div>
+      </div>
+    </div> <!-- /container -->
+    {{#blog.ganalytics}}
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', '{{blog.ganalytics}}', 'auto');
+      ga('send', 'pageview');
+    </script>
+    {{/blog.ganalytics}}
+  </body>
+</html>
+"""
 if __name__ == "__main__":
-    main()
+     fill_vitual_fs()
+     main()

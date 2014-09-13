@@ -7,6 +7,8 @@
 
 def read(path):
     """Reads file content from FS"""
+    if path in VIRTUAL_FS:
+        return VIRTUAL_FS[path]
     with open(path.as_posix(), 'r') as file:
         return file.read()
 
@@ -159,13 +161,14 @@ def create_parser():
     parser.add_argument('-templates',
                         type=Path,
                         help='directory with templates',
-                        default='templates')
+                        default='blogtor-virtual/templates')
     return parser
+
+VIRTUAL_FS = dict()
 
 def main():
     """Start endpoint"""
     args = create_parser().parse_args()
     clean_target(args.target)
     generate(args.blog, args.templates, args.target)
-
 
