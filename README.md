@@ -138,13 +138,13 @@ We use `Python 3.4.1` for development. We do not test it on other Python version
 
 
 Contribute
-_____
+-----
 Preretirements are:
 
  - Installed git and created github account
  - Installed Python 3.4.+, pip3, [pylint][pylint]
 
- To make you changes please follow next steps
+To make you changes please follow next steps
 
  - Fork https://github.com/st-kurilin/blogator
  - Run `pip3 install -r requirements.txt` to install all dependencies
@@ -166,4 +166,3 @@ Preretirements are:
  [md]: https://en.wikipedia.org/wiki/Markdown
  [py]: https://www.python.org
  [pylint]: http://www.pylint.org
- 
