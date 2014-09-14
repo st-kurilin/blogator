@@ -43,6 +43,12 @@ class TestIO(unittest.TestCase):
         self.assertIsNotNone(content)
 
 
+def parse_templates(templates_arg):
+    """Generic method that can be used to create other tests"""
+    parser = b.create_parser()
+    args = parser.parse_args(['myblog', '-templates', templates_arg])
+    return args.templates
+
 # pylint: disable=R0904
 class TestArgumentParser(unittest.TestCase):
     """Test comand line argumens parsing"""
@@ -57,6 +63,26 @@ class TestArgumentParser(unittest.TestCase):
         with self.assertRaises(SystemExit) as catched:
             b.create_parser().parse_args(['-h'])
         self.assertEqual(catched.exception.code, 0)
+
+    def test_templates_arg_default(self):
+        """Templates arg has default value."""
+        args = b.create_parser().parse_args(['myblog'])
+        self.assertEqual(Path('blogtor-virtual') / 'templates', args.templates)
+
+    def test_templates_arg_simple(self):
+        """Templates arg could be other than default value"""
+        self.assertEqual(Path('foo'), parse_templates('foo'))
+
+    def test_templates_arg_complex(self):
+        """Templates arg could be other than default value"""
+        self.assertEqual(Path('foo') / 'bar', parse_templates('foo/bar'))
+
+    # def test_templates_args_can_have_slash_at_the_end(self):
+    def test_template_arg_with_slash(self):
+        """Templates arg should ignore slash at the end"""
+        self.assertEqual(Path('foo') / 'bar', parse_templates('foo/bar/'))
+
+
 
 
 # pylint: disable=R0904
