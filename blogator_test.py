@@ -30,6 +30,28 @@ class TestIO(unittest.TestCase):
             b.write(Path(temp.name), content)
             self.assertEqual(content, b.read(Path(temp.name)))
 
+    def test_copy(self):
+        """Test copy file"""
+        import tempfile
+        import os.path
+        from random import randint
+        temp_dir = Path(tempfile.gettempdir())
+        rand = str(randint(0, 1000))
+        from_dir = temp_dir / ('from_dir' + rand)
+        from_file = from_dir / ('from_file' + rand)
+        to_dir = temp_dir / ('to_dir' + rand)
+        to_file = to_dir / ('to_file' + rand)
+        os.mkdir(from_dir.as_posix())
+        os.mkdir(to_dir.as_posix())
+        content = "Hi " + rand
+
+        b.write(from_file, content)
+        b.copy(from_file, to_file)
+
+        self.assertEqual(content, b.read(to_file))
+
+
+
     def test_has_default_post_template(self):
         """Should be in virtual fs"""
         path = Path('blogtor-virtual') / 'templates' / 'post.template.html'

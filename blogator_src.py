@@ -17,6 +17,12 @@ def write(path, content):
     with open(path.as_posix(), 'w') as file:
         file.write(content)
 
+def copy(from_p, to_p):
+    """Copies file content"""
+    import shutil
+    shutil.copyfile(from_p.as_posix(), to_p.as_posix())
+
+
 def md_read(inp):
     """Reads markdown formatted message."""
     import markdown
@@ -90,11 +96,10 @@ def parse_post(post_blob, post_blob_orig_name):
 
 def prepare_favicon(blog, blog_home_dir, target):
     """Puts favicon file in right place with right name."""
-    import shutil
     if blog['favicon-file'] is not None:
         orig_path = blog_home_dir / blog['favicon-file']
         destination_path = target / 'favicon.ico'
-        shutil.copyfile(orig_path.as_posix(), destination_path.as_posix())
+        copy(orig_path, destination_path)
 
 def clean_target(target):
     """Cleans target directory. Hidden files will not be deleted."""
