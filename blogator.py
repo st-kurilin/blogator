@@ -18,7 +18,7 @@ See https://github.com/st-kurilin/blogator for details.
 """Default values for some files.
    Used to distribute script as a single file.
    Actual values filled by build.py script."""
-PREDEFINED = dict()
+PREDEFINED = {}
 
 def read(path):
     """Reads file content from FS"""
@@ -57,9 +57,8 @@ def md_read(inp):
 def md_meta_get(meta, key, alt=None, single_value=True):
     """Reads value from markdown read message meta."""
     if key in meta:
-        if single_value:
-            if meta[key]:
-                return meta[key][0]
+        if single_value and meta[key]:
+            return meta[key][0]
         else:
             return meta[key]
     return alt
@@ -135,7 +134,7 @@ def generate(blog_path, templates, target):
 
     def prepare_favicon(blog, blog_home_dir, target):
         """Puts favicon file in right place with right name."""
-        if blog['favicon-file'] is not None:
+        if blog['favicon-file']:
             orig_path = blog_home_dir / blog['favicon-file']
             destination_path = target / 'favicon.ico'
             copy(orig_path, destination_path)
@@ -218,7 +217,7 @@ def main():
     clean_target(args.target)
     generate(args.blog, args.templates, args.target)
 
-def fill_vitual_fs(): 
+def fill_vitual_fs():
     """Fills virtual fs with default values"""
     from pathlib import Path
     PREDEFINED[Path('blogtor-virtual') / 'templates' / 'index.template.html'] = """<!DOCTYPE html>

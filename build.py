@@ -7,7 +7,7 @@ Builds final blogator.py script that should be distribured
 def main():
     """Start endpoint"""
     import textwrap
-    with open("blogator_src.py", 'r') as srcf, open("blogator.py", 'w') as resf:
+    with open('blogator_src.py') as srcf, open('blogator.py', 'w') as resf:
         src = srcf.read()
         resf.write(textwrap.dedent("""\
                    \"\"\"
@@ -17,15 +17,15 @@ def main():
                    \"\"\"
                    #__ignore comment bellow__"""))
         resf.write(src)
-        resf.write(textwrap.dedent("""\
-                   def fill_vitual_fs(): 
-                       \"\"\"Fills virtual fs with default values\"\"\"
-                       from pathlib import Path\n"""))
+        resf.write('def fill_vitual_fs():\n'
+                   '    """Fills virtual fs with default values"""\n'
+                   '    from pathlib import Path\n')
         for template in ['index.template.html', 'post.template.html']:
-            with open("templates/"  +  template, 'r') as templf:
-                left = "VIRTUAL_FS[Path('blogtor-virtual') / 'templates' / '{0}']".format(template)
+            with open("templates/"  +  template) as templf:
+                left = ("PREDEFINED[Path('blogtor-virtual') "
+                        "/ 'templates' / '{}']".format(template))
                 content = templf.read()
-                resf.write("    {0} = \"\"\"{1}\"\"\"\n".format(left, content))
+                resf.write('    {0} = """{1}"""\n'.format(left, content))
         resf.write(textwrap.dedent("""\
                    if __name__ == "__main__":
                         fill_vitual_fs()

@@ -38,7 +38,7 @@ class TestIO(unittest.TestCase):
         from random import randint
         temp_dir = Path(tempfile.gettempdir())
         try:
-            rand = str(randint(0, 1000))
+            rand = str(randint(0, 1))
             from_dir = temp_dir / ('from_dir' + rand)
             from_file = from_dir / ('from_file' + rand)
             to_dir = temp_dir / ('to_dir' + rand)
@@ -107,6 +107,8 @@ class TestArgumentParser(unittest.TestCase):
     def test_template_arg_with_slash(self):
         """Templates arg should ignore slash at the end"""
         self.assertEqual(Path('foo') / 'bar', parse_templates('foo/bar/'))
+
+
 
 
 # pylint: disable=R0904
