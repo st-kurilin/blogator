@@ -22,6 +22,9 @@ def copy(from_p, to_p):
     import shutil
     shutil.copyfile(from_p.as_posix(), to_p.as_posix())
 
+def file_exist(path):
+    """Check if file exist for specified path"""
+    return path.is_file()
 
 def md_read(inp):
     """Reads markdown formatted message."""
@@ -129,13 +132,27 @@ def generate(blog_path, templates, target):
         write(out_path, pystached(read(template_path), data))
 
     def fname(file_name):
-        """file name without suffix. TODO: handle complex paths"""
-        return file_name.split(".")[0]
+        """file name without extension"""
+        from pathlib import Path
+        as_path = Path(file_name)
+        name = as_path.name
+        suffix = as_path.suffix
+        return name.rsplit(suffix, 1)[0]
+
+    def read_post(declared_path, work_dir):
+        """Find location of post and read it"""
+        from pathlib import Path
+        candidates = [work_dir / declared_path, Path(declared_path)]
+        for candidate in candidates:
+            if file_exist(candidate):
+                return read(candidate)
+        raise NameError("Tried find post file by [{}] but didn't find anything"
+                        .format(', '.join([_.as_posix() for _ in candidates])))
 
     blog = parse_blog_meta(read(blog_path))
-
-    prepare_favicon(blog, blog_path.parent, target)
-    posts = [parse_post(read(blog_path.parent / _), fname(_))
+    work_dir = blog_path.parent
+    prepare_favicon(blog, work_dir, target)
+    posts = [parse_post(read_post(_, work_dir), fname(_))
              for _ in blog['posts']]
     for active_index, post in enumerate(posts):
         posts_view = marked_active_post(posts, active_index)

@@ -51,7 +51,6 @@ class TestIO(unittest.TestCase):
         self.assertEqual(content, b.read(to_file))
 
 
-
     def test_has_default_post_template(self):
         """Should be in virtual fs"""
         path = Path('blogtor-virtual') / 'templates' / 'post.template.html'
@@ -122,15 +121,38 @@ class TestBlogator(unittest.TestCase):
         def memory_write(path, data):
             """write to memory variable instead of file system"""
             memory[path] = data
+
+        def memory_copy(from_p, to_p):
+            """Copies virtual files"""
+            memory[from_p] = memory[to_p]
+
+        def memory_file_exist(path):
+            """Check if content could be retrieved by specified path"""
+            return path in memory
+
         memory = dict()
         self._bread = b.read
         self._bwrite = b.write
+        self._bcopy = b.copy
+        self._bfile_exist = b.file_exist
+
         self._read = b.read = memory_read
         self._write = b.write = memory_write
+        self._copy = b.copy = memory_copy
+        self._bfile_exist = b.file_exist = memory_file_exist
 
     def tearDown(self):
         b.read = self._bread
         b.write = self._bwrite
+        b.copy = self._bcopy
+        b.file_exist = self._bfile_exist
+
+    def add_simple_templates(self, templates):
+        """Common method to save simplest templates instead of default"""
+        self._write(templates / "index.template.html",
+                    "{{{blog.title}}}:{{#posts}}{{{title}}}{{/posts}}")
+        self._write(templates / "post.template.html",
+                    "{{{post.title}}}--{{{post.content}}}")
 
     def test_simplest_happy_path(self):
         """Go throw full execution
@@ -140,10 +162,7 @@ class TestBlogator(unittest.TestCase):
         out = Path("myout")
         blog = Path("myblog")
 
-        self._write(templates / "index.template.html",
-                    "{{{blog.title}}}:{{#posts}}{{{title}}}{{/posts}}")
-        self._write(templates / "post.template.html",
-                    "{{{post.title}}}--{{{post.content}}}")
+        self.add_simple_templates(templates)
 
         self._write(blog,
                     "title:    birds\nposts:    pheasants.md")
@@ -153,10 +172,41 @@ class TestBlogator(unittest.TestCase):
         b.generate(blog, templates, out)
 
         self.assertEqual("birds:pheasant",
-                         self._read(Path(out / "index.html")))
+                         self._read(out / "index.html"))
         self.assertEqual("pheasant--<p>it's all about pheasants</p>",
                          self._read(out / "pheasants.html"))
 
+    def test_post_file_related(self):
+        """paths to posts could be specified related to blog file"""
+        templates = Path("mytemplates")
+        out = Path("myout")
+        blog = Path('someparent') / 'myblog'
+
+        self.add_simple_templates(templates)
+
+        self._write(blog,
+                    "title:    birds\nposts:    posts/pheasants.md")
+        self._write(blog.parent / 'posts' / 'pheasants.md',
+                    "title: pheasant\nit's all about pheasants")
+        b.generate(blog, templates, out)
+
+        self.assertTrue(self._bfile_exist(out / 'pheasants.html'))
+
+    def test_post_file_absolute(self):
+        """paths to posts could be specified with absolute paths"""
+        templates = Path("mytemplates")
+        out = Path('myout')
+        blog = Path('someparent') / 'myblog'
+
+        self.add_simple_templates(templates)
+
+        self._write(blog,
+                    "title:    birds\nposts:    /abs/posts/pheasants.md")
+        self._write(Path('/abs') / 'posts' / 'pheasants.md',
+                    "title: pheasant\nit's all about pheasants")
+        b.generate(blog, templates, out)
+
+        self.assertTrue(self._bfile_exist(out / 'pheasants.html'))
 
 
 if __name__ == '__main__':
