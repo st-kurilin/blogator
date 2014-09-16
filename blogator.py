@@ -12,11 +12,19 @@ See https://github.com/st-kurilin/blogator for details.
 #Main script. Used to build final script using build.py script.
 #
 
+###Files operations
+#separated to make testing easier
+
+"""Default values for some files.
+   Used to distribute script as a single file.
+   Actual values filled by build.py script."""
+PREDEFINED = dict()
+
 def read(path):
     """Reads file content from FS"""
-    if path in VIRTUAL_FS:
-        return VIRTUAL_FS[path]
-    with open(path.as_posix(), 'r') as file:
+    if path in PREDEFINED:
+        return PREDEFINED[path]
+    with open(path.as_posix()) as file:
         return file.read()
 
 def write(path, content):
@@ -31,11 +39,10 @@ def copy(from_p, to_p):
 
 def file_exist(path):
     """Check if file exist for specified path"""
-    # import os
-    # print("Testing:" + path.as_posix())
-    # os.path.exists(path.as_posix())
     return path.is_file()
 
+
+###Markdown template engine operations
 def md_read(inp):
     """Reads markdown formatted message."""
     import markdown
@@ -57,6 +64,8 @@ def md_meta_get(meta, key, alt=None, single_value=True):
             return meta[key]
     return alt
 
+
+###Pystache template engine operations
 def pystached(template, data):
     """Applies data to pystache template"""
     import pystache
@@ -64,13 +73,15 @@ def pystached(template, data):
     pys_renderer = pystache.Renderer()
     return pys_renderer.render(pys_template, data)
 
+
+###Meta files readers operations
 def parse_blog_meta(blog_meta_content):
     """Reads general blog info from file."""
     from functools import partial
     meta = md_read(blog_meta_content)['meta']
     get = partial(md_meta_get, meta)
     favicon_file = get('favicon-file')
-    favicon_url = get('favicon-url', "favicon.cc/favicon/169/1/favicon.png")
+    favicon_url = get('favicon-url', 'favicon.cc/favicon/169/1/favicon.png')
     return {
         'meta'         : meta,
         'title'        : get('title', 'Blog'),
@@ -107,13 +118,8 @@ def parse_post(post_blob, post_blob_orig_name):
                                       get('published'))
     return post
 
-def prepare_favicon(blog, blog_home_dir, target):
-    """Puts favicon file in right place with right name."""
-    if blog['favicon-file'] is not None:
-        orig_path = blog_home_dir / blog['favicon-file']
-        destination_path = target / 'favicon.ico'
-        copy(orig_path, destination_path)
 
+###Flow operations
 def clean_target(target):
     """Cleans target directory. Hidden files will not be deleted."""
     import os
@@ -126,6 +132,13 @@ def clean_target(target):
 
 def generate(blog_path, templates, target):
     """Generates blog content. Target directory expected to be empty."""
+
+    def prepare_favicon(blog, blog_home_dir, target):
+        """Puts favicon file in right place with right name."""
+        if blog['favicon-file'] is not None:
+            orig_path = blog_home_dir / blog['favicon-file']
+            destination_path = target / 'favicon.ico'
+            copy(orig_path, destination_path)
 
     def marked_active_post(orig_posts, active_index):
         """Returns copy of original posts
@@ -174,6 +187,8 @@ def generate(blog_path, templates, target):
                     target / "index.html",
                     {'blog' : blog, 'posts': posts})
 
+
+###Utils
 def create_parser():
     """Parser factory method."""
     import argparse
@@ -196,7 +211,6 @@ def create_parser():
                         default='blogtor-virtual/templates')
     return parser
 
-VIRTUAL_FS = dict()
 
 def main():
     """Start endpoint"""
@@ -207,7 +221,7 @@ def main():
 def fill_vitual_fs(): 
     """Fills virtual fs with default values"""
     from pathlib import Path
-    VIRTUAL_FS[Path('blogtor-virtual') / 'templates' / 'index.template.html'] = """<!DOCTYPE html>
+    PREDEFINED[Path('blogtor-virtual') / 'templates' / 'index.template.html'] = """<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -299,7 +313,7 @@ def fill_vitual_fs():
   </body>
 </html>
 """
-    VIRTUAL_FS[Path('blogtor-virtual') / 'templates' / 'post.template.html'] = """<!DOCTYPE html>
+    PREDEFINED[Path('blogtor-virtual') / 'templates' / 'post.template.html'] = """<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
