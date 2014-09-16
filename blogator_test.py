@@ -228,20 +228,6 @@ class TestBlogator(unittest.TestCase):
 
         self.assert_not_empty_file_exist(out / 'favicon.ico')
 
-    def test_use_favicon_url_of_file(self):
-        """favicon url can not be used together with favicon file"""
-        templates = Path("mytemplates")
-        out = Path('myout')
-        blog = Path('myblog')
-
-        self.add_simple_templates(templates)
-
-        b.write(Path('/d/fav.png'), 'my favicon')
-        b.write(blog, ('title:           birds\n'
-                       'favicon-file:    /d/fav.png\n'
-                       'favicon-url:     http://foo.bar/ico.png'))
-        self.assertRaises(TypeError, b.generate(blog, templates, out))
-
     def assert_not_empty_file_exist(self, path):
         self.assertTrue(b.file_exist(path))
         self.assertTrue(len(b.read(path)) > 0)
