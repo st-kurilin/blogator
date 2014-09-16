@@ -34,21 +34,26 @@ class TestIO(unittest.TestCase):
         """Test copy file"""
         import tempfile
         import os.path
+        import shutil
         from random import randint
         temp_dir = Path(tempfile.gettempdir())
-        rand = str(randint(0, 1000))
-        from_dir = temp_dir / ('from_dir' + rand)
-        from_file = from_dir / ('from_file' + rand)
-        to_dir = temp_dir / ('to_dir' + rand)
-        to_file = to_dir / ('to_file' + rand)
-        os.mkdir(from_dir.as_posix())
-        os.mkdir(to_dir.as_posix())
-        content = "Hi " + rand
+        try:
+            rand = str(randint(0, 1000))
+            from_dir = temp_dir / ('from_dir' + rand)
+            from_file = from_dir / ('from_file' + rand)
+            to_dir = temp_dir / ('to_dir' + rand)
+            to_file = to_dir / ('to_file' + rand)
+            os.mkdir(from_dir.as_posix())
+            os.mkdir(to_dir.as_posix())
+            content = "Hi " + rand
 
-        b.write(from_file, content)
-        b.copy(from_file, to_file)
+            b.write(from_file, content)
+            b.copy(from_file, to_file)
 
-        self.assertEqual(content, b.read(to_file))
+            self.assertEqual(content, b.read(to_file))
+        finally:
+            shutil.rmtree(from_dir.as_posix(), ignore_errors=True)
+            shutil.rmtree(to_dir.as_posix(), ignore_errors=True)
 
 
     def test_has_default_post_template(self):
@@ -104,8 +109,6 @@ class TestArgumentParser(unittest.TestCase):
         self.assertEqual(Path('foo') / 'bar', parse_templates('foo/bar/'))
 
 
-
-
 # pylint: disable=R0904
 class TestBlogator(unittest.TestCase):
     """Tests with isolated IO"""
@@ -124,35 +127,35 @@ class TestBlogator(unittest.TestCase):
 
         def memory_copy(from_p, to_p):
             """Copies virtual files"""
-            memory[from_p] = memory[to_p]
+            memory[to_p] = memory[from_p]
 
         def memory_file_exist(path):
             """Check if content could be retrieved by specified path"""
             return path in memory
 
         memory = dict()
-        self._bread = b.read
-        self._bwrite = b.write
-        self._bcopy = b.copy
-        self._bfile_exist = b.file_exist
+        self._orig_read = b.read
+        self._orig_write = b.write
+        self._orig_copy = b.copy
+        self._orig_file_exist = b.file_exist
 
-        self._read = b.read = memory_read
-        self._write = b.write = memory_write
-        self._copy = b.copy = memory_copy
-        self._bfile_exist = b.file_exist = memory_file_exist
+        b.read = memory_read
+        b.write = memory_write
+        b.copy = memory_copy
+        b.file_exist = memory_file_exist
 
     def tearDown(self):
-        b.read = self._bread
-        b.write = self._bwrite
-        b.copy = self._bcopy
-        b.file_exist = self._bfile_exist
+        b.read = self._orig_read
+        b.write = self._orig_write
+        b.copy = self._orig_copy
+        b.file_exist = self._orig_file_exist
 
     def add_simple_templates(self, templates):
         """Common method to save simplest templates instead of default"""
-        self._write(templates / "index.template.html",
-                    "{{{blog.title}}}:{{#posts}}{{{title}}}{{/posts}}")
-        self._write(templates / "post.template.html",
-                    "{{{post.title}}}--{{{post.content}}}")
+        b.write(templates / "index.template.html",
+                "{{{blog.title}}}:{{#posts}}{{{title}}}{{/posts}}")
+        b.write(templates / "post.template.html",
+                "{{{post.title}}}--{{{post.content}}}")
 
     def test_simplest_happy_path(self):
         """Go throw full execution
@@ -164,17 +167,17 @@ class TestBlogator(unittest.TestCase):
 
         self.add_simple_templates(templates)
 
-        self._write(blog,
-                    "title:    birds\nposts:    pheasants.md")
-        self._write(Path("pheasants.md"),
-                    "title: pheasant\nit's all about pheasants")
+        b.write(blog,
+                "title:    birds\nposts:    pheasants.md")
+        b.write(Path("pheasants.md"),
+                "title: pheasant\nit's all about pheasants")
 
         b.generate(blog, templates, out)
 
         self.assertEqual("birds:pheasant",
-                         self._read(out / "index.html"))
+                         b.read(out / "index.html"))
         self.assertEqual("pheasant--<p>it's all about pheasants</p>",
-                         self._read(out / "pheasants.html"))
+                         b.read(out / "pheasants.html"))
 
     def test_post_file_related(self):
         """paths to posts could be specified related to blog file"""
@@ -184,13 +187,13 @@ class TestBlogator(unittest.TestCase):
 
         self.add_simple_templates(templates)
 
-        self._write(blog,
-                    "title:    birds\nposts:    posts/pheasants.md")
-        self._write(blog.parent / 'posts' / 'pheasants.md',
-                    "title: pheasant\nit's all about pheasants")
+        b.write(blog,
+                "title:    birds\nposts:    posts/pheasants.md")
+        b.write(blog.parent / 'posts' / 'pheasants.md',
+                "title: pheasant\nit's all about pheasants")
         b.generate(blog, templates, out)
 
-        self.assertTrue(self._bfile_exist(out / 'pheasants.html'))
+        self.assert_not_empty_file_exist(out / 'pheasants.html')
 
     def test_post_file_absolute(self):
         """paths to posts could be specified with absolute paths"""
@@ -200,13 +203,46 @@ class TestBlogator(unittest.TestCase):
 
         self.add_simple_templates(templates)
 
-        self._write(blog,
-                    "title:    birds\nposts:    /abs/posts/pheasants.md")
-        self._write(Path('/abs') / 'posts' / 'pheasants.md',
-                    "title: pheasant\nit's all about pheasants")
+        b.write(blog,
+                "title:    birds\nposts:    /abs/posts/pheasants.md")
+        b.write(Path('/abs') / 'posts' / 'pheasants.md',
+                "title: pheasant\nit's all about pheasants")
         b.generate(blog, templates, out)
 
-        self.assertTrue(self._bfile_exist(out / 'pheasants.html'))
+        self.assert_not_empty_file_exist(out / 'pheasants.html')
+
+    def test_favicon_file_copied(self):
+        """favicon file should be copied to target"""
+        templates = Path("mytemplates")
+        out = Path('myout')
+        blog = Path('myblog')
+
+        self.add_simple_templates(templates)
+
+        b.write(Path('/d/fav.png'), 'my favicon')
+        b.write(blog,
+                "title:    birds\nfavicon-file:    /d/fav.png")
+        b.generate(blog, templates, out)
+
+        self.assert_not_empty_file_exist(out / 'favicon.ico')
+
+    def test_use_favicon_url_of_file(self):
+        """favicon url can not be used together with favicon file"""
+        templates = Path("mytemplates")
+        out = Path('myout')
+        blog = Path('myblog')
+
+        self.add_simple_templates(templates)
+
+        b.write(Path('/d/fav.png'), 'my favicon')
+        b.write(blog, ('title:           birds\n'
+                       'favicon-file:    /d/fav.png\n'
+                       'favicon-url:     http://foo.bar/ico.png'))
+        self.assertRaises(TypeError, b.generate(blog, templates, out))
+
+    def assert_not_empty_file_exist(self, path):
+        self.assertTrue(b.file_exist(path))
+        self.assertTrue(len(b.read(path)) > 0)
 
 
 if __name__ == '__main__':

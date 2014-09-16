@@ -40,7 +40,7 @@ You can specify next basic options in your *BLOG_FILE*
   - **annotation:**   short description that could be show on your pages.
   - **favicon-file:** file from your local file system that could be used as a favicon. 
     Could not be used together with `favicon` attribute.
-  - **favicon:**      url to the image that could be used as favicon. 
+  - **favicon-url:**  url to the image that could be used as favicon. 
     Could not be used together with `favicon-file` attribute.
   - **posts:**        lists of files where posts stored
 
