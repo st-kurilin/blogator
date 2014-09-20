@@ -159,6 +159,10 @@ class TestBlogator(unittest.TestCase):
         b.write(templates / "post.template.html",
                 "{{{post.title}}}--{{{post.content}}}")
 
+    def add_default_templates(self):
+        b.fill_vitual_fs()
+        [b.write(path, content) for path, content in b.PREDEFINED.items()]
+
     def test_simplest_happy_path(self):
         """Go throw full execution
            except working with IO (arguments parsing, file system)
@@ -228,9 +232,56 @@ class TestBlogator(unittest.TestCase):
 
         self.assert_not_empty_file_exist(out / 'favicon.ico')
 
+    def test_ganalytics_present(self):
+        """Google Analytics should be added in the output html
+        since blog file has ganalytics key-value"""
+        templates = Path('blogtor-virtual') / 'templates'
+        out = Path("myout")
+        blog = Path("myblog")
+        ganalytics = "UA-77777777-7"
+
+        self.add_default_templates()
+
+        b.write(blog,
+                "title: birds\nposts:   pheasants.md\nganalytics:   " +
+                ganalytics)
+        b.write(Path("pheasants.md"),
+                "title: pheasant\nit's all about pheasants")
+        b.generate(blog, templates, out)
+
+        self.assertTrue(self.is_google_analytics_presented((out / "index.html"),
+                                                           ganalytics))
+        self.assertTrue(self.is_google_analytics_presented((out / "pheasants.html"),
+                                                           ganalytics))
+
+    def test_ganalytics_absent(self):
+        """Gooogle Analytics should not be added in the output html
+        since blog file doesn't have ganalytics key-value"""
+        templates = Path('blogtor-virtual') / 'templates'
+        out = Path("myout")
+        blog = Path("myblog")
+
+        self.add_default_templates()
+
+        b.write(blog,
+                "title: birds\nposts:   pheasants.md\n")
+        b.write(Path("pheasants.md"),
+                "title: pheasant\nit's all about pheasants")
+        b.generate(blog, templates, out)
+
+        self.assertFalse(self.is_google_analytics_presented((out / "index.html"),
+                                                            "UA-"))
+        self.assertFalse(self.is_google_analytics_presented((out / "pheasants.html"),
+                                                            "UA-"))
+
     def assert_not_empty_file_exist(self, path):
         self.assertTrue(b.file_exist(path))
         self.assertTrue(len(b.read(path)) > 0)
+
+    def is_google_analytics_presented(self, path, ganalytics):
+        content = b.read(path)
+        return 'www.google-analytics.com/analytics.js' in content and \
+               ganalytics in content
 
 
 if __name__ == '__main__':

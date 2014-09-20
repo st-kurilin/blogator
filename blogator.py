@@ -89,7 +89,7 @@ def parse_blog_meta(blog_meta_content):
         'favicon'      : 'favicon.ico' if favicon_file else favicon_url,
         'posts'        : get('posts', [], False),
         'disqus'       : get('disqus'),
-        'ganalitics'   : get('ganalitics'),
+        'ganalytics'   : get('ganalytics'),
     }
 
 def parse_post(post_blob, post_blob_orig_name):
@@ -99,7 +99,7 @@ def parse_post(post_blob, post_blob_orig_name):
 
     def reformat_date(inpf, outf, date):
         """Reformats dates from one specified format to other one."""
-        if date is None:
+        if not date:
             return None
         return datetime.datetime.strptime(date, inpf).strftime(outf)
 
@@ -298,17 +298,17 @@ def fill_vitual_fs():
         </div>
       </div>
     </div> <!-- /container -->
-    {{#blog.tracking_code}}
+    {{#blog.ganalytics}}
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-      ga('create', '{{blog.tracking_code}}', 'auto');
+      ga('create', '{{blog.ganalytics}}', 'auto');
       ga('send', 'pageview');
     </script>
-    {{/blog.tracking_code}}
+    {{/blog.ganalytics}}
   </body>
 </html>
 """
