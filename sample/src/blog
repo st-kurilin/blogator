@@ -2,7 +2,7 @@ title:           Blogging
 annotation:      keep calm and blog on
 favicon-file:    redghost.ico
 disqus:          blogname-test-test
-ganalitics:      UA-54347170-1
+ganalytics:      UA-77777777-7
 posts:           intro.md
                  history.md
                  popularity.md

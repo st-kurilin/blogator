@@ -82,7 +82,7 @@ def parse_blog_meta(blog_meta_content):
         'favicon'      : 'favicon.ico' if favicon_file else favicon_url,
         'posts'        : get('posts', [], False),
         'disqus'       : get('disqus'),
-        'ganalitics'   : get('ganalitics'),
+        'ganalytics'   : get('ganalytics'),
     }
 
 def parse_post(post_blob, post_blob_orig_name):
