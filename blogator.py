@@ -99,7 +99,7 @@ def parse_post(post_blob, post_blob_orig_name):
 
     def reformat_date(inpf, outf, date):
         """Reformats dates from one specified format to other one."""
-        if not date:
+        if date is None:
             return None
         return datetime.datetime.strptime(date, inpf).strftime(outf)
 
