@@ -17,20 +17,20 @@ def read(path):
     """Reads file content from FS"""
     if path in PREDEFINED:
         return PREDEFINED[path]
-    with open(path.as_posix()) as file:
+    with open(str(path)) as file:
         return file.read()
 
 def write(path, content):
     """Writes file content to FS"""
-    with open(path.as_posix(), 'w') as file:
+    with open(str(path), 'w') as file:
         file.write(content)
 
 def copy(from_p, to_p):
     """Copies file content"""
     import shutil
-    shutil.copyfile(from_p.as_posix(), to_p.as_posix())
+    shutil.copyfile(str(from_p), str(to_p))
 
-def file_exist(path):
+def is_file_exist(path):
     """Check if file exist for specified path"""
     return path.is_file()
 
@@ -104,8 +104,7 @@ def parse_post(post_blob, post_blob_orig_name):
     post['title'] = get('title', post_blob_orig_name)
     post['brief'] = get('brief')
     post['short_title'] = get('short_title', post['title'])
-    post['link_base'] = get('link', post_blob_orig_name + ".html")
-    post['link'] = './' + post['link_base']
+    post['link'] = './' + get('link', post_blob_orig_name + ".html")
     post['published'] = reformat_date('%Y-%m-%d', '%d %b %Y',
                                       get('published'))
     return post
@@ -116,7 +115,7 @@ def clean_target(target):
     """Cleans target directory. Hidden files will not be deleted."""
     import os
     import glob
-    tpath = target.as_posix()
+    tpath = str(target)
     if not os.path.exists(tpath):
         os.makedirs(tpath)
     for file in glob.glob(tpath + '/*'):
@@ -146,33 +145,27 @@ def generate(blog_path, templates, target):
         """Generate templated content to file."""
         write(out_path, pystached(read(template_path), data))
 
-    def fname(file_name):
-        """file name without extension"""
-        from pathlib import Path
-        as_path = Path(file_name)
-        name = as_path.name
-        suffix = as_path.suffix
-        return name.rsplit(suffix, 1)[0]
-
     def read_post(declared_path, work_dir):
         """Find location of post and read it"""
         from pathlib import Path
         candidates = [work_dir / declared_path, Path(declared_path)]
         for candidate in candidates:
-            if file_exist(candidate):
+            if is_file_exist(candidate):
                 return read(candidate)
         raise NameError("Tried find post file by [{}] but didn't find anything"
-                        .format(', '.join([_.as_posix() for _ in candidates])))
+                        .format(', '.join([str(_) for _ in candidates])))
+
+    from pathlib import Path
 
     blog = parse_blog_meta(read(blog_path))
     work_dir = blog_path.parent
     prepare_favicon(blog, work_dir, target)
-    posts = [parse_post(read_post(_, work_dir), fname(_))
+    posts = [parse_post(read_post(Path(_), work_dir), Path(_).stem)
              for _ in blog['posts']]
     for active_index, post in enumerate(posts):
         posts_view = marked_active_post(posts, active_index)
         write_templated(templates / "post.template.html",
-                        target / post['link_base'],
+                        target / post['link'],
                         {'blog': blog, 'posts': posts_view, 'post': post})
 
     write_templated(templates / "index.template.html",
@@ -181,7 +174,7 @@ def generate(blog_path, templates, target):
 
 
 ###Utils
-def create_parser():
+def parse_args(args):
     """Parser factory method."""
     import argparse
     from pathlib import Path
@@ -201,12 +194,13 @@ def create_parser():
                         type=Path,
                         help='directory with templates',
                         default='blogtor-virtual/templates')
-    return parser
+    return parser.parse_args(args)
 
 
 def main():
     """Start endpoint"""
-    args = create_parser().parse_args()
+    import sys
+    args = parse_args(sys.argv[1:])
     clean_target(args.target)
     generate(args.blog, args.templates, args.target)
 

@@ -38,13 +38,13 @@ class TestIO(unittest.TestCase):
         from random import randint
         temp_dir = Path(tempfile.gettempdir())
         try:
-            rand = str(randint(0, 1))
+            rand = str(randint(0, 100))
             from_dir = temp_dir / ('from_dir' + rand)
             from_file = from_dir / ('from_file' + rand)
             to_dir = temp_dir / ('to_dir' + rand)
             to_file = to_dir / ('to_file' + rand)
-            os.mkdir(from_dir.as_posix())
-            os.mkdir(to_dir.as_posix())
+            os.mkdir(str(from_dir))
+            os.mkdir(str(to_dir))
             content = "Hi " + rand
 
             b.write(from_file, content)
@@ -52,8 +52,8 @@ class TestIO(unittest.TestCase):
 
             self.assertEqual(content, b.read(to_file))
         finally:
-            shutil.rmtree(from_dir.as_posix(), ignore_errors=True)
-            shutil.rmtree(to_dir.as_posix(), ignore_errors=True)
+            shutil.rmtree(str(from_dir), ignore_errors=True)
+            shutil.rmtree(str(to_dir), ignore_errors=True)
 
 
     def test_has_default_post_template(self):
@@ -71,8 +71,7 @@ class TestIO(unittest.TestCase):
 
 def parse_templates(templates_arg):
     """Generic method that can be used to create other tests"""
-    parser = b.create_parser()
-    args = parser.parse_args(['myblog', '-templates', templates_arg])
+    args = b.parse_args(['myblog', '-templates', templates_arg])
     return args.templates
 
 # pylint: disable=R0904
@@ -81,18 +80,18 @@ class TestArgumentParser(unittest.TestCase):
 
     def test_blog_value_parsing(self):
         """Argument parser should evaluate argument as blog"""
-        args = b.create_parser().parse_args(['myblog'])
+        args = b.parse_args(['myblog'])
         self.assertEqual(Path('myblog'), args.blog)
 
     def test_help_could_be_called(self):
         """Argument parser should print help message and terminate program"""
         with self.assertRaises(SystemExit) as catched:
-            b.create_parser().parse_args(['-h'])
+            b.parse_args(['-h'])
         self.assertEqual(catched.exception.code, 0)
 
     def test_templates_arg_default(self):
         """Templates arg has default value."""
-        args = b.create_parser().parse_args(['myblog'])
+        args = b.parse_args(['myblog'])
         self.assertEqual(Path('blogtor-virtual') / 'templates', args.templates)
 
     def test_templates_arg_simple(self):
@@ -120,7 +119,7 @@ class TestBlogator(unittest.TestCase):
             """read from memory variable instead of file system"""
             if path in memory:
                 return memory[path]
-            raise IOError("Could not find " + path.as_posix() +
+            raise IOError("Could not find " + str(path) +
                           " in " + str(memory.keys()))
 
         def memory_write(path, data):
@@ -131,7 +130,7 @@ class TestBlogator(unittest.TestCase):
             """Copies virtual files"""
             memory[to_p] = memory[from_p]
 
-        def memory_file_exist(path):
+        def memory_is_file_exist(path):
             """Check if content could be retrieved by specified path"""
             return path in memory
 
@@ -139,18 +138,18 @@ class TestBlogator(unittest.TestCase):
         self._orig_read = b.read
         self._orig_write = b.write
         self._orig_copy = b.copy
-        self._orig_file_exist = b.file_exist
+        self._orig_is_file_exist = b.is_file_exist
 
         b.read = memory_read
         b.write = memory_write
         b.copy = memory_copy
-        b.file_exist = memory_file_exist
+        b.is_file_exist = memory_is_file_exist
 
     def tearDown(self):
         b.read = self._orig_read
         b.write = self._orig_write
         b.copy = self._orig_copy
-        b.file_exist = self._orig_file_exist
+        b.is_file_exist = self._orig_is_file_exist
 
     def add_simple_templates(self, templates):
         """Common method to save simplest templates instead of default"""
@@ -275,7 +274,7 @@ class TestBlogator(unittest.TestCase):
                                                             "UA-"))
 
     def assert_not_empty_file_exist(self, path):
-        self.assertTrue(b.file_exist(path))
+        self.assertTrue(b.is_file_exist(path))
         self.assertTrue(len(b.read(path)) > 0)
 
     def is_google_analytics_presented(self, path, ganalytics):
