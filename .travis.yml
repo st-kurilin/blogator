@@ -1,0 +1,7 @@
+# Config file for Travis CI (https://travis-ci.org)
+language: python
+python: 3.4
+install: pip install -r requirements.txt
+script: 
+- python build.py
+- python -m unittest blogator_test.py
